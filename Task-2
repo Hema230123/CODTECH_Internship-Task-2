@@ -1,0 +1,282 @@
+/*Interactive Quiz Application*/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain-Based Quiz</title>
+  <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: plum;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .quiz-container {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    h2 {
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+    }
+
+    .answers {
+        list-style: none;
+        padding: 0;
+    }
+
+    .answers li {
+        margin: 10px 0;
+    }
+
+    .answer-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .answer-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .correct {
+        background-color: #4caf50 !important;
+    }
+
+    .incorrect {
+        background-color: #f44336 !important;
+    }
+
+    .results {
+        font-size: 1.2em;
+        margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div id="quiz">
+      <h2>Choose a Domain</h2>
+      <ul class="answers">
+        <li><button class="answer-btn" data-domain="dataScience">Data Science</button></li>
+        <li><button class="answer-btn" data-domain="machineLearning">Machine Learning</button></li>
+        <li><button class="answer-btn" data-domain="programming">Programming</button></li>
+      </ul>
+    </div>
+    <button id="next-btn" class="btn" style="display:none;">Next</button>
+  </div>
+  <script>
+    const questionsByDomain = {
+        dataScience: [
+            {
+                question: "What does CSV stand for?",
+                options: ["Comma-Separated Values", "Common System Variables", "Character String Vector", "Control System Version"],
+                answer: 0
+            },
+            {
+                question: "Which Python library is primarily used for data analysis?",
+                options: ["Pandas", "NumPy", "Matplotlib", "Seaborn"],
+                answer: 0
+            },
+            {
+                question: "What is the full form of ETL in Data Science?",
+                options: ["Extract, Transform, Load", "Enhance, Test, Load", "Evaluate, Transform, Learn", "Extract, Test, Learn"],
+                answer: 0
+            },
+            {
+                question: "Which of these is a type of data visualization?",
+                options: ["Histogram", "Pandas", "Query", "Classification"],
+                answer: 0
+            },
+            {
+                question: "Which of the following is a data wrangling technique?",
+                options: ["Data Cleaning", "Data Validation", "Data Analysis", "Data Loading"],
+                answer: 0
+            },
+            {
+                question: "What is the purpose of a correlation matrix?",
+                options: ["Analyze relationships between variables", "Normalize data", "Reduce dimensionality", "Optimize data storage"],
+                answer: 0
+            }
+        ],
+        machineLearning: [
+            {
+                question: "Which algorithm is used for regression analysis?",
+                options: ["Decision Tree", "Linear Regression", "K-Means Clustering", "Support Vector Machine"],
+                answer: 1
+            },
+            {
+                question: "What is overfitting in Machine Learning?",
+                options: ["Model performs well on training data but poorly on test data", "Model fails to capture patterns in training data", "Model performs well on all data", "Model uses too much memory"],
+                answer: 0
+            },
+            {
+                question: "Which library is commonly used for deep learning?",
+                options: ["TensorFlow", "Pandas", "Scikit-learn", "NumPy"],
+                answer: 0
+            },
+            {
+                question: "What is the full form of SVM?",
+                options: ["Support Vector Machine", "Statistical Variance Model", "Systematic Value Map", "Simple Vector Model"],
+                answer: 0
+            },
+            {
+                question: "Which metric is used for classification problems?",
+                options: ["Accuracy", "RMSE", "R² Score", "MAE"],
+                answer: 0
+            },
+            {
+                question: "What is gradient descent?",
+                options: ["An optimization algorithm", "A neural network layer", "A type of clustering", "A supervised learning method"],
+                answer: 0
+            }
+        ],
+        programming: [
+            {
+                question: "Which of the following is a dynamically typed language?",
+                options: ["Java", "C", "Python", "C++"],
+                answer: 2
+            },
+            {
+                question: "What does 'int' represent in programming?",
+                options: ["Integer", "Interrupt", "Interface", "Initialize"],
+                answer: 0
+            },
+            {
+                question: "What is the time complexity of binary search?",
+                options: ["O(n)", "O(log n)", "O(n²)", "O(1)"],
+                answer: 1
+            },
+            {
+                question: "Which keyword is used to define a function in Python?",
+                options: ["function", "def", "lambda", "return"],
+                answer: 1
+            },
+            {
+                question: "What is a compiler?",
+                options: ["Converts high-level code to machine code", "Converts data to binary", "Checks syntax", "Optimizes memory"],
+                answer: 0
+            },
+            {
+                question: "Which operator is used to access members of a class in C++?",
+                options: [".", "::", "->", "&"],
+                answer: 0
+            }
+        ]
+    };
+
+    const quizContainer = document.getElementById("quiz");
+    const nextBtn = document.getElementById("next-btn");
+
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedDomain = '';
+    let currentQuestions = [];
+
+    function loadDomainQuestions(domain) {
+        selectedDomain = domain;
+        currentQuestions = questionsByDomain[domain];
+        currentQuestion = 0;
+        score = 0;
+        loadQuiz();
+    }
+
+    function loadQuiz() {
+        const quiz = currentQuestions[currentQuestion];
+        quizContainer.innerHTML = `
+            <h2>${quiz.question}</h2>
+            <ul class="answers">
+                ${quiz.options
+                    .map(
+                        (option, index) =>
+                            `<li><button class="answer-btn" data-index="${index}">${option}</button></li>`
+                    )
+                    .join("")}
+            </ul>
+        `;
+        document.querySelectorAll(".answer-btn").forEach((btn) => {
+            btn.addEventListener("click", handleAnswer);
+        });
+    }
+
+    function handleAnswer(e) {
+        const selectedBtn = e.target;
+        const selectedIndex = parseInt(selectedBtn.dataset.index);
+        const isCorrect = selectedIndex === currentQuestions[currentQuestion].answer;
+
+        if (isCorrect) {
+            selectedBtn.classList.add("correct");
+            score++;
+        } else {
+            selectedBtn.classList.add("incorrect");
+            const correctBtn = document.querySelector(
+                `.answer-btn[data-index="${currentQuestions[currentQuestion].answer}"]`
+            );
+            correctBtn.classList.add("correct");
+        }
+
+        document.querySelectorAll(".answer-btn").forEach((btn) => {
+            btn.disabled = true;
+        });
+
+        nextBtn.style.display = "block";
+    }
+
+    function showResults() {
+        quizContainer.innerHTML = `
+            <h2>Quiz Completed!</h2>
+            <p class="results">You scored ${score} out of ${currentQuestions.length}.</p>
+            <button class="btn" onclick="location.reload()">Restart Quiz</button>
+        `;
+        nextBtn.style.display = "none";
+    }
+
+    nextBtn.addEventListener("click", () => {
+        currentQuestion++;
+        if (currentQuestion < currentQuestions.length) {
+            loadQuiz();
+            nextBtn.style.display = "none";
+        } else {
+            showResults();
+        }
+    });
+
+    document.querySelectorAll(".answer-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            const domain = e.target.dataset.domain;
+            loadDomainQuestions(domain);
+            nextBtn.style.display = "none";
+        });
+    });
+  </script>
+</body>
+</html>
